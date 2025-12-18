@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +26,11 @@ import {
     Loader2,
     Mail
 } from "lucide-react";
+
+import { StripePayment, PayPalPayment, PaymentMethodSelector } from "@/components/payment";
+import { useSubscriptionStore } from "@/stores/useSubscriptionStore";
+import { usePaymentSettingsStore } from "@/stores/usePaymentSettingsStore";
+import type { PaymentMethod, SubscriptionInfo } from "@/types/paymentTypes";
 
 // Plans data
 const plansData = {
@@ -69,20 +76,45 @@ const Checkout = () => {
     const { toast } = useToast();
 
     const planId = (searchParams.get("plan") || "pro") as PlanId;
-    const billingCycle = searchParams.get("billing") || "yearly";
+    const billingCycle = (searchParams.get("billing") || "yearly") as 'monthly' | 'yearly';
 
     const [step, setStep] = useState<"auth" | "payment" | "success">("auth");
     const [loading, setLoading] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [user, setUser] = useState<any>(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [fullName, setFullName] = useState("");
     const [isLogin, setIsLogin] = useState(true);
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("stripe");
 
     const plan = plansData[planId] || plansData.pro;
     const price = billingCycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
     const PlanIcon = plan.icon;
+
+    // Get payment settings
+    const { getActiveStripeKey, getActivePayPalClientId } = usePaymentSettingsStore();
+    const { setSubscription } = useSubscriptionStore();
+
+    // Initialize Stripe
+    const stripeKey = getActiveStripeKey();
+    const stripePromise = useMemo(() => {
+        if (stripeKey) {
+            return loadStripe(stripeKey);
+        }
+        // Use a test key for demo purposes
+        return loadStripe('pk_test_demo');
+    }, [stripeKey]);
+
+    // PayPal options
+    const paypalClientId = getActivePayPalClientId();
+    const paypalOptions = {
+        clientId: paypalClientId || 'test',
+        currency: 'EUR',
+        intent: 'subscription',
+    };
+
+    const stripeAvailable = true; // Always show for demo
+    const paypalAvailable = true; // Always show for demo
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -110,7 +142,7 @@ const Checkout = () => {
                 options: {
                     redirectTo: `${window.location.origin}/checkout?plan=${planId}&billing=${billingCycle}`,
                 }
-            } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+            } as any);
             if (error) throw error;
         } catch (error) {
             toast({
@@ -140,7 +172,7 @@ const Checkout = () => {
                     options: {
                         emailRedirectTo: `${window.location.origin}/checkout?plan=${planId}&billing=${billingCycle}`,
                         data: { full_name: fullName },
-                    } as any // eslint-disable-line @typescript-eslint/no-explicit-any
+                    } as any
                 });
                 if (error) throw error;
                 toast({
@@ -159,20 +191,53 @@ const Checkout = () => {
         }
     };
 
-    const handlePayment = async () => {
-        setLoading(true);
+    const handlePaymentSuccess = (transactionId: string) => {
+        // Create subscription record
+        const subscriptionInfo: SubscriptionInfo = {
+            planId,
+            billingCycle,
+            status: 'active',
+            currentPeriodEnd: new Date(Date.now() + (billingCycle === 'yearly' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString(),
+            paymentMethod,
+            subscriptionId: transactionId,
+        };
 
-        // Simulate payment processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        setSubscription(subscriptionInfo);
 
-        // In production, this would integrate with Stripe/WooCommerce
         toast({
-            title: "Abonnement activé !",
-            description: `Votre plan ${plan.name} est maintenant actif.`,
+            title: "Paiement réussi !",
+            description: `Votre abonnement ${plan.name} est maintenant actif.`,
         });
 
         setStep("success");
-        setLoading(false);
+    };
+
+    const handlePaymentError = (error: string) => {
+        toast({
+            title: "Erreur de paiement",
+            description: error,
+            variant: "destructive",
+        });
+    };
+
+    // For free plan, skip payment
+    const handleFreePlan = () => {
+        const subscriptionInfo: SubscriptionInfo = {
+            planId: 'free',
+            billingCycle: 'monthly',
+            status: 'active',
+            currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+            paymentMethod: 'stripe',
+        };
+
+        setSubscription(subscriptionInfo);
+
+        toast({
+            title: "Bienvenue !",
+            description: "Votre compte gratuit est activé.",
+        });
+
+        setStep("success");
     };
 
     return (
@@ -213,12 +278,12 @@ const Checkout = () => {
                             ].map((s, i) => (
                                 <div key={s.id} className="flex items-center">
                                     <div className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                    ${step === s.id || (step === "payment" && i === 0) || step === "success"
+                                        w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
+                                        ${step === s.id || (step === "payment" && i === 0) || step === "success"
                                             ? "bg-primary text-primary-foreground"
                                             : "bg-muted text-muted-foreground"
                                         }
-                  `}>
+                                    `}>
                                         {step === "success" || (step === "payment" && i === 0) ? (
                                             <Check className="h-4 w-4" />
                                         ) : (
@@ -374,49 +439,59 @@ const Checkout = () => {
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent className="space-y-6">
-                                        <div className="space-y-4">
-                                            <div className="space-y-2">
-                                                <Label>Numéro de carte</Label>
-                                                <Input placeholder="4242 4242 4242 4242" />
+                                        {/* Free plan - no payment needed */}
+                                        {planId === 'free' ? (
+                                            <div className="text-center py-4">
+                                                <p className="text-muted-foreground mb-4">
+                                                    Le plan Free ne nécessite pas de paiement.
+                                                </p>
+                                                <Button
+                                                    className="w-full h-12 text-base"
+                                                    onClick={handleFreePlan}
+                                                >
+                                                    <Check className="mr-2 h-5 w-5" />
+                                                    Activer mon compte gratuit
+                                                </Button>
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="space-y-2">
-                                                    <Label>Date d'expiration</Label>
-                                                    <Input placeholder="MM/AA" />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label>CVC</Label>
-                                                    <Input placeholder="123" />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Nom sur la carte</Label>
-                                                <Input placeholder="JEAN DUPONT" />
-                                            </div>
-                                        </div>
+                                        ) : (
+                                            <>
+                                                {/* Payment Method Selector */}
+                                                <PaymentMethodSelector
+                                                    selectedMethod={paymentMethod}
+                                                    onMethodChange={setPaymentMethod}
+                                                    stripeAvailable={stripeAvailable}
+                                                    paypalAvailable={paypalAvailable}
+                                                />
 
-                                        <Separator />
+                                                <Separator />
+
+                                                {/* Payment Form based on selected method */}
+                                                {paymentMethod === 'stripe' ? (
+                                                    <Elements stripe={stripePromise}>
+                                                        <StripePayment
+                                                            amount={price || 0}
+                                                            onSuccess={handlePaymentSuccess}
+                                                            onError={handlePaymentError}
+                                                        />
+                                                    </Elements>
+                                                ) : (
+                                                    <PayPalScriptProvider options={paypalOptions}>
+                                                        <PayPalPayment
+                                                            amount={price || 0}
+                                                            planId={planId}
+                                                            billingCycle={billingCycle}
+                                                            onSuccess={handlePaymentSuccess}
+                                                            onError={handlePaymentError}
+                                                        />
+                                                    </PayPalScriptProvider>
+                                                )}
+                                            </>
+                                        )}
 
                                         <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                             <Shield className="h-5 w-5 text-success" />
                                             <span>Vos données sont chiffrées et sécurisées (SSL 256-bit)</span>
                                         </div>
-
-                                        <Button
-                                            className="w-full h-12 text-base"
-                                            onClick={handlePayment}
-                                            disabled={loading}
-                                        >
-                                            {loading ? (
-                                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                            ) : (
-                                                <Lock className="mr-2 h-5 w-5" />
-                                            )}
-                                            {price !== null
-                                                ? `Payer ${price}€/${billingCycle === "yearly" ? "mois" : "mois"}`
-                                                : "Confirmer l'abonnement"
-                                            }
-                                        </Button>
                                     </CardContent>
                                 </Card>
                             </motion.div>

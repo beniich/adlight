@@ -50,6 +50,7 @@ const SchedulePage = lazy(() => import("./pages/hospital/SchedulePage"));
 const StaffPage = lazy(() => import("./pages/hospital/StaffPage"));
 const BedManagementPage = lazy(() => import("./pages/hospital/BedManagementPage"));
 const PatientDetailsPage = lazy(() => import("./pages/hospital/PatientDetailsPage"));
+const ClinicMap = lazy(() => import("./pages/resources/ClinicMap"));
 
 
 // Configure React Query with optimizations
@@ -95,6 +96,7 @@ const App = () => (
               <Route path="/schedule" element={<ProtectedRoute><SchedulePage /></ProtectedRoute>} />
               <Route path="/staff" element={<ProtectedRoute><StaffPage /></ProtectedRoute>} />
               <Route path="/resources" element={<ProtectedRoute><BedManagementPage /></ProtectedRoute>} />
+              <Route path="/resources/map" element={<ProtectedRoute><ClinicMap /></ProtectedRoute>} />
               <Route path="/emr" element={<ProtectedRoute><PatientsPage /></ProtectedRoute>} />
               <Route path="/billing" element={<ProtectedRoute><BillingPage /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />

@@ -5,6 +5,8 @@ import { Cloud, Menu, X, Download } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useTranslation } from "react-i18next";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -94,6 +96,7 @@ export const Navbar = () => {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSelector />
             <ThemeToggle />
             {showInstall && (
               <Button variant="outline" size="sm" onClick={handleInstallClick} className="gap-2">

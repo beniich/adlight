@@ -6,11 +6,108 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { User, Bell, Shield, Palette, Database, CreditCard } from "lucide-react";
+import { User, Bell, Shield, Palette, Database, CreditCard, ImageIcon, Upload, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { usePaymentSettingsStore } from "@/stores/usePaymentSettingsStore";
+import { useBrandingStore, DEFAULT_BRANDING_CONFIG } from "@/stores/useBrandingStore";
+import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const Settings = () => {
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { settings, updateSettings } = usePaymentSettingsStore();
+
+  // Local state for form inputs
+  const [stripePublishableKey, setStripePublishableKey] = useState(settings.stripePublishableKey);
+  const [stripeSecretKey, setStripeSecretKey] = useState(settings.stripeSecretKey);
+  const [stripeWebhookSecret, setStripeWebhookSecret] = useState(settings.stripeWebhookSecret);
+  const [stripeTestMode, setStripeTestMode] = useState(settings.stripeTestMode);
+
+  const [paypalClientId, setPaypalClientId] = useState(settings.paypalClientId);
+  const [paypalClientSecret, setPaypalClientSecret] = useState(settings.paypalClientSecret);
+  const [paypalSandboxMode, setPaypalSandboxMode] = useState(settings.paypalSandboxMode);
+
+  // Branding state
+  const { appName, headerTitle, logoUrl, faviconUrl, iconUrl, footerText, updateBranding, resetToDefaults } = useBrandingStore();
+  const [brandAppName, setBrandAppName] = useState(appName);
+  const [brandHeaderTitle, setBrandHeaderTitle] = useState(headerTitle);
+  const [brandLogoUrl, setBrandLogoUrl] = useState(logoUrl || '');
+  const [brandFaviconUrl, setBrandFaviconUrl] = useState(faviconUrl || '');
+  const [brandIconUrl, setBrandIconUrl] = useState(iconUrl || '');
+  const [brandFooterText, setBrandFooterText] = useState(footerText);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync branding state with store
+  useEffect(() => {
+    setBrandAppName(appName);
+    setBrandHeaderTitle(headerTitle);
+    setBrandLogoUrl(logoUrl || '');
+    setBrandFaviconUrl(faviconUrl || '');
+    setBrandIconUrl(iconUrl || '');
+    setBrandFooterText(footerText);
+  }, [appName, headerTitle, logoUrl, faviconUrl, iconUrl, footerText]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setter(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveBranding = () => {
+    updateBranding({
+      appName: brandAppName,
+      headerTitle: brandHeaderTitle,
+      logoUrl: brandLogoUrl || null,
+      faviconUrl: brandFaviconUrl || null,
+      iconUrl: brandIconUrl || null,
+      footerText: brandFooterText,
+    });
+    toast({
+      title: "Personnalisation sauvegardée",
+      description: "Votre marque a été mise à jour avec succès.",
+    });
+  };
+
+  const handleResetBranding = () => {
+    resetToDefaults();
+    toast({
+      title: "Valeurs par défaut restaurées",
+      description: "Les paramètres de marque ont été réinitialisés.",
+    });
+  };
+
+  const handleSaveStripe = () => {
+    updateSettings({
+      stripePublishableKey,
+      stripeSecretKey,
+      stripeWebhookSecret,
+      stripeTestMode,
+    });
+    toast({
+      title: "Configuration Stripe sauvegardée",
+      description: "Vos clés API Stripe ont été enregistrées.",
+    });
+  };
+
+  const handleSavePayPal = () => {
+    updateSettings({
+      paypalClientId,
+      paypalClientSecret,
+      paypalSandboxMode,
+    });
+    toast({
+      title: "Configuration PayPal sauvegardée",
+      description: "Vos clés API PayPal ont été enregistrées.",
+    });
+  };
 
   const handleExportData = () => {
     toast({
@@ -31,51 +128,55 @@ const Settings = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Paramètres</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('settings.title')}</h1>
           <p className="text-muted-foreground mt-2">
-            Gérez vos préférences et paramètres d'application
+            {t('settings.subtitle')}
           </p>
         </div>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="w-full flex flex-wrap lg:grid lg:grid-cols-6 h-auto gap-2">
+          <TabsList className="w-full flex flex-wrap lg:grid lg:grid-cols-7 h-auto gap-2">
             <TabsTrigger value="profile" className="gap-2 flex-1">
               <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Profil</span>
+              <span className="hidden sm:inline">{t('settings.profile')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="branding" className="gap-2 flex-1">
+              <ImageIcon className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('settings.branding')}</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2 flex-1">
               <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Notifs</span>
+              <span className="hidden sm:inline">{t('settings.notifications')}</span>
             </TabsTrigger>
             <TabsTrigger value="security" className="gap-2 flex-1">
               <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Sécurité</span>
+              <span className="hidden sm:inline">{t('settings.security')}</span>
             </TabsTrigger>
             <TabsTrigger value="integrations" className="gap-2 flex-1">
               <CreditCard className="h-4 w-4" />
-              <span className="hidden sm:inline">Intégrations</span>
+              <span className="hidden sm:inline">{t('settings.integrations')}</span>
             </TabsTrigger>
             <TabsTrigger value="appearance" className="gap-2 flex-1">
               <Palette className="h-4 w-4" />
-              <span className="hidden sm:inline">Apparence</span>
+              <span className="hidden sm:inline">{t('settings.appearance')}</span>
             </TabsTrigger>
             <TabsTrigger value="data" className="gap-2 flex-1">
               <Database className="h-4 w-4" />
-              <span className="hidden sm:inline">Données</span>
+              <span className="hidden sm:inline">{t('settings.data')}</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-4">
             <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Informations Personnelles</h3>
+              <h3 className="text-lg font-semibold mb-4">{t('settings.personalInfo')}</h3>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName">Prénom</Label>
+                    <Label htmlFor="firstName">{t('settings.firstName')}</Label>
                     <Input id="firstName" placeholder="Jean" />
                   </div>
                   <div>
-                    <Label htmlFor="lastName">Nom</Label>
+                    <Label htmlFor="lastName">{t('settings.lastName')}</Label>
                     <Input id="lastName" placeholder="Dupont" />
                   </div>
                 </div>
@@ -96,7 +197,198 @@ const Settings = () => {
             </Card>
           </TabsContent>
 
+          {/* Onglet Personnalisation de la Marque */}
+          <TabsContent value="branding" className="space-y-4">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold">{t('settings.brandingTitle')}</h3>
+                  <p className="text-sm text-muted-foreground">{t('settings.brandingSubtitle')}</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={handleResetBranding} className="gap-2">
+                  <RotateCcw className="h-4 w-4" />
+                  {t('settings.resetToDefaults')}
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Nom de l'application */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="appName">{t('settings.appName')}</Label>
+                    <Input
+                      id="appName"
+                      placeholder="CRM Pro"
+                      value={brandAppName}
+                      onChange={(e) => setBrandAppName(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">{t('settings.displayedInSidebar')}</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="headerTitle">{t('settings.headerTitle')}</Label>
+                    <Input
+                      id="headerTitle"
+                      placeholder="Cloud Industrie"
+                      value={brandHeaderTitle}
+                      onChange={(e) => setBrandHeaderTitle(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">{t('settings.displayedInPageTitle')}</p>
+                  </div>
+                </div>
+
+                {/* Texte du pied de page */}
+                <div>
+                  <Label htmlFor="footerText">{t('settings.footerText')}</Label>
+                  <Input
+                    id="footerText"
+                    placeholder="Cloudindustry LTD"
+                    value={brandFooterText}
+                    onChange={(e) => setBrandFooterText(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">{t('settings.displayedAtBottom')}</p>
+                </div>
+
+                <Separator />
+
+                {/* Upload du Logo */}
+                <div className="grid grid-cols-3 gap-6">
+                  <div className="space-y-3">
+                    <Label>{t('settings.mainLogo')}</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden">
+                        {brandLogoUrl ? (
+                          <img src={brandLogoUrl} alt="Logo" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          ref={logoInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileUpload(e, setBrandLogoUrl)}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                          onClick={() => logoInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          {t('common.upload')}
+                        </Button>
+                        {brandLogoUrl && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-1 text-destructive"
+                            onClick={() => setBrandLogoUrl('')}
+                          >
+                            {t('common.delete')}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload Favicon */}
+                  <div className="space-y-3">
+                    <Label>{t('settings.favicon')}</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden">
+                        {brandFaviconUrl ? (
+                          <img src={brandFaviconUrl} alt="Favicon" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          ref={faviconInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileUpload(e, setBrandFaviconUrl)}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                          onClick={() => faviconInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          {t('common.upload')}
+                        </Button>
+                        {brandFaviconUrl && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-1 text-destructive"
+                            onClick={() => setBrandFaviconUrl('')}
+                          >
+                            {t('common.delete')}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload Icône Sidebar */}
+                  <div className="space-y-3">
+                    <Label>{t('settings.sidebarIcon')}</Label>
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-muted/30 overflow-hidden">
+                        {brandIconUrl ? (
+                          <img src={brandIconUrl} alt="Icon" className="h-full w-full object-cover" />
+                        ) : (
+                          <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          ref={iconInputRef}
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleFileUpload(e, setBrandIconUrl)}
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full gap-2"
+                          onClick={() => iconInputRef.current?.click()}
+                        >
+                          <Upload className="h-4 w-4" />
+                          {t('common.upload')}
+                        </Button>
+                        {brandIconUrl && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full mt-1 text-destructive"
+                            onClick={() => setBrandIconUrl('')}
+                          >
+                            {t('common.delete')}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <Button onClick={handleSaveBranding} className="w-full">
+                  {t('settings.saveChanges')}
+                </Button>
+              </div>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="notifications" className="space-y-4">
+
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Préférences de Notifications</h3>
               <div className="space-y-4">
@@ -184,25 +476,45 @@ const Settings = () => {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="stripe-pk">Clé publique (Publishable Key)</Label>
-                  <Input id="stripe-pk" placeholder="pk_live_..." className="font-mono text-sm" />
+                  <Input
+                    id="stripe-pk"
+                    placeholder="pk_live_..."
+                    className="font-mono text-sm"
+                    value={stripePublishableKey}
+                    onChange={(e) => setStripePublishableKey(e.target.value)}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="stripe-sk">Clé secrète (Secret Key)</Label>
-                  <Input id="stripe-sk" type="password" placeholder="sk_live_..." className="font-mono text-sm" />
+                  <Input
+                    id="stripe-sk"
+                    type="password"
+                    placeholder="sk_live_..."
+                    className="font-mono text-sm"
+                    value={stripeSecretKey}
+                    onChange={(e) => setStripeSecretKey(e.target.value)}
+                  />
                   <p className="text-xs text-muted-foreground mt-1">Ne partagez jamais votre clé secrète</p>
                 </div>
                 <div>
                   <Label htmlFor="stripe-webhook">Webhook Secret</Label>
-                  <Input id="stripe-webhook" type="password" placeholder="whsec_..." className="font-mono text-sm" />
+                  <Input
+                    id="stripe-webhook"
+                    type="password"
+                    placeholder="whsec_..."
+                    className="font-mono text-sm"
+                    value={stripeWebhookSecret}
+                    onChange={(e) => setStripeWebhookSecret(e.target.value)}
+                  />
                 </div>
                 <div className="flex items-center justify-between pt-2">
                   <div>
                     <p className="font-medium">Mode Test</p>
                     <p className="text-sm text-muted-foreground">Utilisez les clés de test pour les développements</p>
                   </div>
-                  <Switch />
+                  <Switch checked={stripeTestMode} onCheckedChange={setStripeTestMode} />
                 </div>
-                <Button className="w-full">Sauvegarder la configuration Stripe</Button>
+                <Button className="w-full" onClick={handleSaveStripe}>Sauvegarder la configuration Stripe</Button>
               </div>
             </Card>
 
@@ -251,21 +563,59 @@ const Settings = () => {
               </div>
             </Card>
 
+            {/* PayPal Integration */}
+            <Card className="p-6">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="p-3 rounded-xl bg-[#003087]/10">
+                  <svg className="h-6 w-6" viewBox="0 0 24 24" fill="#003087">
+                    <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c-.013.076-.026.175-.041.254-.59 3.025-2.566 6.082-8.558 6.082h-2.19c-1.717 0-3.146 1.27-3.402 2.997L5.23 22.54c-.072.45.264.86.72.86h4.247c.508 0 .94-.368 1.02-.867l.03-.162.788-4.99.051-.276a1.028 1.028 0 0 1 1.015-.866h.64c4.149 0 7.394-1.686 8.342-6.561.28-1.44.209-2.593-.861-3.76z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    PayPal
+                  </h3>
+                  <p className="text-sm text-muted-foreground">Acceptez les paiements via PayPal</p>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="paypal-client-id">Client ID</Label>
+                  <Input
+                    id="paypal-client-id"
+                    placeholder="AaBbCc..."
+                    className="font-mono text-sm"
+                    value={paypalClientId}
+                    onChange={(e) => setPaypalClientId(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="paypal-secret">Client Secret</Label>
+                  <Input
+                    id="paypal-secret"
+                    type="password"
+                    placeholder="EIDkPnPt..."
+                    className="font-mono text-sm"
+                    value={paypalClientSecret}
+                    onChange={(e) => setPaypalClientSecret(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Ne partagez jamais votre secret</p>
+                </div>
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <p className="font-medium">Mode Sandbox</p>
+                    <p className="text-sm text-muted-foreground">Utilisez l'environnement de test PayPal</p>
+                  </div>
+                  <Switch checked={paypalSandboxMode} onCheckedChange={setPaypalSandboxMode} />
+                </div>
+                <Button className="w-full" onClick={handleSavePayPal}>Sauvegarder la configuration PayPal</Button>
+              </div>
+            </Card>
+
             {/* Other Integrations */}
             <Card className="p-6">
               <h3 className="text-lg font-semibold mb-4">Autres intégrations</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-[#00D4AA]/10">
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#00D4AA">
-                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 21.6c-5.302 0-9.6-4.298-9.6-9.6S6.698 2.4 12 2.4s9.6 4.298 9.6 9.6-4.298 9.6-9.6 9.6z" />
-                      </svg>
-                    </div>
-                    <span className="font-medium">PayPal</span>
-                  </div>
-                  <Button variant="outline" size="sm">Configurer</Button>
-                </div>
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-[#1A1F71]/10">
@@ -276,6 +626,18 @@ const Settings = () => {
                     <span className="font-medium">Visa Direct</span>
                   </div>
                   <Button variant="outline" size="sm">Bientôt</Button>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-[#FF5F00]/10">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#FF5F00">
+                        <circle cx="7" cy="12" r="7" fill="#EB001B" />
+                        <circle cx="17" cy="12" r="7" fill="#F79E1B" />
+                      </svg>
+                    </div>
+                    <span className="font-medium">Mastercard</span>
+                  </div>
+                  <Button variant="outline" size="sm">Via Stripe</Button>
                 </div>
               </div>
             </Card>

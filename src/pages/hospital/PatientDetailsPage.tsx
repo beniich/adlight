@@ -4,14 +4,18 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, FileText, Activity, Shield, Clock, Phone, Mail, MapPin } from "lucide-react";
+import { ArrowLeft, FileText, Activity, Shield, Clock, Phone, Mail, MapPin, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { PatientForm } from "@/components/patients/PatientForm";
+import { useState } from "react";
 
 export default function PatientDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const patient = useHospitalStore(state => state.patients.find(p => p.id === id));
+    const [isEditOpen, setIsEditOpen] = useState(false);
 
     if (!patient) {
         return (
@@ -28,19 +32,43 @@ export default function PatientDetailsPage() {
         <DashboardLayout>
             <div className="space-y-6 animate-fade-in pb-12">
                 {/* Header */}
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/patients')}>
-                        <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <div>
-                        <h1 className="text-2xl font-bold flex items-center gap-3">
-                            {patient.first_name} {patient.last_name}
-                            <Badge variant={patient.status === 'admitted' ? 'default' : 'outline'}>
-                                {patient.status}
-                            </Badge>
-                        </h1>
-                        <p className="text-muted-foreground text-sm">Dossier #{patient.id}</p>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon" onClick={() => navigate('/patients')}>
+                            <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <div>
+                            <h1 className="text-2xl font-bold flex items-center gap-3">
+                                {patient.first_name} {patient.last_name}
+                                <Badge variant={patient.status === 'admitted' ? 'default' : 'outline'}>
+                                    {patient.status}
+                                </Badge>
+                            </h1>
+                            <p className="text-muted-foreground text-sm">Dossier #{patient.id}</p>
+                        </div>
                     </div>
+
+                    <Sheet open={isEditOpen} onOpenChange={setIsEditOpen}>
+                        <SheetTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <Edit className="h-4 w-4" />
+                                Modifier le dossier
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent className="min-w-[400px] md:min-w-[600px] overflow-y-auto">
+                            <SheetHeader className="mb-6">
+                                <SheetTitle>Modifier le Dossier Patient</SheetTitle>
+                                <SheetDescription>
+                                    Modifiez les informations ci-dessous. Les changements seront appliqués immédiatement après enregistrement.
+                                </SheetDescription>
+                            </SheetHeader>
+                            <PatientForm
+                                editPatientId={patient.id}
+                                initialData={patient}
+                                onSuccess={() => setIsEditOpen(false)}
+                            />
+                        </SheetContent>
+                    </Sheet>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

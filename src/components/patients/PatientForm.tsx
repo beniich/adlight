@@ -52,49 +52,72 @@ type PatientFormValues = z.infer<typeof patientFormSchema>;
 
 interface PatientFormProps {
     onSuccess?: () => void;
+    initialData?: Partial<Patient>;
+    editPatientId?: string;
 }
 
-export function PatientForm({ onSuccess }: PatientFormProps) {
+export function PatientForm({ onSuccess, initialData, editPatientId }: PatientFormProps) {
     const addPatient = useHospitalStore((state) => state.addPatient);
+    const updatePatient = useHospitalStore((state) => state.updatePatient);
 
     const form = useForm<PatientFormValues>({
         resolver: zodResolver(patientFormSchema),
         defaultValues: {
-            first_name: "",
-            last_name: "",
-            status: "admitted",
+            first_name: initialData?.first_name || "",
+            last_name: initialData?.last_name || "",
+            dob: initialData?.dob || "",
+            gender: initialData?.gender || "M",
+            socialSecurityNumber: initialData?.socialSecurityNumber || "",
+            phone: initialData?.phone || "",
+            email: initialData?.email || "",
+            address: initialData?.address || "",
+            admissionReason: initialData?.admissionReason || "",
+            diagnosis: initialData?.diagnosis || "",
+            allergies: initialData?.allergies?.join(', ') || "",
+            medicalHistory: initialData?.medicalHistory?.join(', ') || "",
+            insuranceProvider: initialData?.insuranceProvider || "",
+            status: initialData?.status || "admitted",
         },
     });
 
     const onSubmit = (data: PatientFormValues) => {
         // Transform strings to arrays for tags
-        const allergiesArray = data.allergies ? data.allergies.split(',').map(s => s.trim()) : [];
-        const historyArray = data.medicalHistory ? data.medicalHistory.split(',').map(s => s.trim()) : [];
+        const allergiesArray = data.allergies ? data.allergies.split(',').map(s => s.trim()).filter(s => s !== "") : [];
+        const historyArray = data.medicalHistory ? data.medicalHistory.split(',').map(s => s.trim()).filter(s => s !== "") : [];
 
-        addPatient({
-            ...data,
-            // Explicitly ensure required fields are present if TS complains (though Zod handles this)
-            first_name: data.first_name,
-            last_name: data.last_name,
-            gender: data.gender,
-            status: data.status,
-            dob: data.dob,
-            phone: data.phone,
-            admissionReason: data.admissionReason,
-            allergies: allergiesArray,
-            medicalHistory: historyArray,
-            last_visit: new Date().toISOString(),
-            // Optional fields
-            socialSecurityNumber: data.socialSecurityNumber,
-            email: data.email,
-            address: data.address,
-            diagnosis: data.diagnosis,
-            insuranceProvider: data.insuranceProvider,
-        });
+        if (editPatientId) {
+            updatePatient(editPatientId, {
+                ...data,
+                allergies: allergiesArray,
+                medicalHistory: historyArray,
+            });
+            toast.success("Dossier patient mis à jour", {
+                description: `${data.first_name} ${data.last_name} a été mis à jour.`
+            });
+        } else {
+            addPatient({
+                ...data,
+                first_name: data.first_name,
+                last_name: data.last_name,
+                gender: data.gender,
+                status: data.status,
+                dob: data.dob,
+                phone: data.phone,
+                admissionReason: data.admissionReason,
+                allergies: allergiesArray,
+                medicalHistory: historyArray,
+                last_visit: new Date().toISOString(),
+                socialSecurityNumber: data.socialSecurityNumber,
+                email: data.email,
+                address: data.address,
+                diagnosis: data.diagnosis,
+                insuranceProvider: data.insuranceProvider,
+            });
 
-        toast.success("Dossier patient créé avec succès", {
-            description: `${data.first_name} ${data.last_name} a été ajouté.`
-        });
+            toast.success("Dossier patient créé avec succès", {
+                description: `${data.first_name} ${data.last_name} a été ajouté.`
+            });
+        }
 
         if (onSuccess) onSuccess();
     };
@@ -245,7 +268,7 @@ export function PatientForm({ onSuccess }: PatientFormProps) {
 
                     <div className="flex justify-end pt-4 border-t border-border mt-6">
                         <Button type="submit" className="w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90">
-                            Créer le dossier patient
+                            {editPatientId ? "Enregistrer les modifications" : "Créer le dossier patient"}
                         </Button>
                     </div>
                 </Tabs>

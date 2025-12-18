@@ -6,20 +6,23 @@ import { MessagePreview } from "@/components/dashboard/MessagePreview";
 import { AdmissionsChart } from "@/components/dashboard/hospital/AdmissionsChart";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Dashboard = () => {
+  const { t } = useTranslation();
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-fade-in pb-10">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Cockpit Médical</h1>
-            <p className="text-muted-foreground">Vue d'ensemble de l'activité hospitalière</p>
+            <h1 className="text-3xl font-bold text-foreground">{t('dashboard.title')}</h1>
+            <p className="text-muted-foreground">{t('dashboard.subtitle')}</p>
           </div>
           <div className="flex gap-2">
             <Button className="gap-2 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 text-primary-foreground">
               <Plus className="h-4 w-4" />
-              Nouvelle Admission
+              {t('dashboard.newAdmission')}
             </Button>
           </div>
         </div>
