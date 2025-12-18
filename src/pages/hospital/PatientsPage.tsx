@@ -96,7 +96,7 @@ const PatientsPage = () => {
                             </TableHeader>
                             <TableBody>
                                 {filteredPatients.map((patient) => (
-                                    <TableRow key={patient.id} className="hover:bg-muted/50 transition-colors cursor-pointer">
+                                    <TableRow key={patient.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => window.location.href = `/patients/${patient.id}`}>
                                         <TableCell>
                                             <div className="font-medium">{patient.first_name} {patient.last_name}</div>
                                             <div className="text-xs text-muted-foreground">{patient.dob} ({patient.gender})</div>
@@ -113,7 +113,7 @@ const PatientsPage = () => {
                                         <TableCell>{new Date(patient.last_visit).toLocaleDateString()}</TableCell>
                                         <TableCell>{patient.diagnosis}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button variant="ghost" size="sm">
+                                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); window.location.href = `/patients/${patient.id}`; }}>
                                                 Voir Dossier
                                             </Button>
                                         </TableCell>

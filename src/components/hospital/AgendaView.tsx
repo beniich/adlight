@@ -1,19 +1,44 @@
 import { useState } from 'react';
-import { format, addDays, startOfWeek, addHours, startOfDay } from 'date-fns';
+import { format, addDays, startOfWeek, addHours, startOfDay, addMinutes } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Clock, MapPin, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, MapPin, User, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-
-import { useHospitalStore } from "@/stores/useHospitalStore";
+import { useHospitalStore, Appointment } from "@/stores/useHospitalStore";
 import { GoogleCalendarService, CalendarEvent } from '@/components/calendar/GoogleCalendarService';
-import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { DndContext, DragEndEvent, useDraggable, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 
+// --- Draggable Component ---
+const DraggableEvent = ({ event, children, top, height, className }: { event: any, children: React.ReactNode, top: number, height: number, className?: string }) => {
+    const { attributes, listeners, setNodeRef, transform } = useDraggable({
+        id: event.id,
+        data: event,
+        disabled: event.type === 'google' // Disable drag for Google events
+    });
+
+    const style = transform ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        top: `${top}px`,
+        height: `${height}px`,
+        position: 'absolute' as const,
+        zIndex: 50,
+    } : {
+        top: `${top}px`,
+        height: `${height}px`,
+        position: 'absolute' as const,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...listeners} {...attributes} className={className}>
+            {children}
+        </div>
+    );
+};
 
 export const AgendaView = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -25,8 +50,43 @@ export const AgendaView = () => {
     const appointments = useHospitalStore((state) => state.appointments);
     const updateAppointment = useHospitalStore((state) => state.updateAppointment);
 
-    const [editingEvent, setEditingEvent] = useState<any>(null);
+    const [editingEvent, setEditingEvent] = useState<Appointment | null>(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    // DnD Sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, delta } = event;
+        if (!active || !delta.y) return;
+
+        const appointmentId = active.id as string;
+        const appointment = appointments.find(a => a.id === appointmentId);
+
+        if (appointment) {
+            // 80px = 1 hour (60 mins)
+            // delta.y pixels = (delta.y / 80) * 60 minutes
+            const minutesMoved = Math.round((delta.y / 80) * 60);
+
+            // Snap to 15 mins
+            const snappedMinutes = Math.round(minutesMoved / 15) * 15;
+
+            if (snappedMinutes !== 0) {
+                const newStart = addMinutes(appointment.start, snappedMinutes);
+                updateAppointment(appointmentId, {
+                    ...appointment,
+                    start: newStart
+                });
+                toast.success(`Rendez-vous déplacé à ${format(newStart, 'HH:mm')}`);
+            }
+        }
+    };
 
     const handleSaveEvent = (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,7 +94,7 @@ export const AgendaView = () => {
 
         updateAppointment(editingEvent.id, {
             ...editingEvent,
-            duration: Number(editingEvent.duration) // Ensure number
+            duration: Number(editingEvent.duration)
         });
         setIsDialogOpen(false);
         toast.success("Rendez-vous mis à jour");
@@ -62,11 +122,10 @@ export const AgendaView = () => {
         setIsSyncing(false);
     };
 
-    // Merge internal and google events for display
-    // Merge internal and google events for display
+    // Merge internal and google events
     const allEvents = [
-        ...appointments.map(a => ({ ...a, source: 'Internal' })),
-        ...googleEvents.map(g => ({ ...g, duration: (g.end.getTime() - g.start.getTime()) / (1000 * 60 * 60), doctor: g.source, room: 'Google' }))
+        ...appointments.map(a => ({ ...a, source: 'Internal' as const })),
+        ...googleEvents.map(g => ({ ...g, duration: (g.end.getTime() - g.start.getTime()) / (1000 * 60 * 60), doctor: g.source, room: 'Google', source: 'Google' as const, type: 'google' as const }))
     ];
 
     return (
@@ -120,131 +179,129 @@ export const AgendaView = () => {
             </div>
 
             {/* Calendar Body */}
-            <div className="flex-1 overflow-y-auto relative">
-                {/* Time Grid */}
-                <div className="relative min-h-[800px]">
-                    {hours.map((hour) => (
-                        <div key={hour} className="flex border-b border-border/30 h-[80px]">
-                            <div className="w-16 flex-shrink-0 border-r border-border/30 flex justify-center pt-2">
-                                <span className="text-xs font-medium text-muted-foreground">{hour}:00</span>
+            <div className="flex-1 overflow-y-auto relative bg-slate-50/30 dark:bg-black/20">
+                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                    {/* Time Grid */}
+                    <div className="relative min-h-[800px]">
+                        {hours.map((hour) => (
+                            <div key={hour} className="flex border-b border-border/30 h-[80px]">
+                                <div className="w-16 flex-shrink-0 border-r border-border/30 flex justify-center pt-2 bg-background/50">
+                                    <span className="text-xs font-medium text-muted-foreground">{hour}:00</span>
+                                </div>
+                                <div className="flex-1 relative group">
+                                    <div className="absolute inset-0 group-hover:bg-slate-100/30 dark:group-hover:bg-slate-800/20 transition-colors" />
+                                    {/* Half hour line */}
+                                    <div className="absolute top-1/2 left-0 right-0 border-t border-dashed border-border/20" />
+                                </div>
                             </div>
-                            <div className="flex-1 relative group">
-                                <div className="absolute inset-0 group-hover:bg-slate-50/50 dark:group-hover:bg-slate-800/20 transition-colors" />
-                            </div>
-                        </div>
-                    ))}
+                        ))}
 
-                    {/* Events Overlay */}
-                    {allEvents.map((apt) => {
-                        const startHour = apt.start.getHours();
-                        const startMinutes = apt.start.getMinutes();
-                        // Handle events outside 7am-7pm visually later if needed, for now clamp
-                        if (startHour < 7) return null;
+                        {/* Events Overlay */}
+                        {allEvents.map((apt) => {
+                            const startHour = apt.start.getHours();
+                            const startMinutes = apt.start.getMinutes();
+                            if (startHour < 7) return null;
 
-                        const topPosition = ((startHour - 7) * 80) + ((startMinutes / 60) * 80);
-                        // @ts-ignore
-                        const height = apt.duration * 80;
+                            const topPosition = ((startHour - 7) * 80) + ((startMinutes / 60) * 80);
+                            const height = apt.duration * 80;
 
-                        // Don't make Google events editable yet
-                        if (apt.type === 'google') {
-                            return (
+                            const EventContent = () => (
                                 <div
-                                    key={apt.id}
-                                    className={cn("absolute left-20 right-4 rounded-lg border p-3 cursor-pointer hover:shadow-lg transition-all border-l-4", getTypeColor(apt.type))}
-                                    style={{ top: `${topPosition}px`, height: `${height}px` }}
+                                    className={cn("h-full w-full rounded-lg border p-3 cursor-pointer hover:shadow-lg transition-all border-l-4 overflow-hidden", getTypeColor(apt.type))}
                                 >
-                                    {/* Content same as before */}
                                     <div className="flex flex-col h-full">
                                         <div className="flex justify-between items-start">
-                                            <span className="font-semibold text-sm">{apt.title}</span>
-                                            <span className="text-xs opacity-70 flex items-center gap-1">
+                                            <span className="font-semibold text-sm truncate">{apt.title}</span>
+                                            <span className="text-xs opacity-70 flex items-center gap-1 whitespace-nowrap">
                                                 <Clock className="h-3 w-3" />
-                                                {format(apt.start, 'HH:mm')} - {format(addHours(apt.start, Number(apt.duration)), 'HH:mm')}
+                                                {format(apt.start, 'HH:mm')}
                                             </span>
                                         </div>
                                         <div className="mt-auto flex items-center justify-between text-xs opacity-80 pt-2 border-t border-black/5 dark:border-white/5">
-                                            <div className="flex items-center gap-1"><User className="h-3 w-3" />{apt.doctor}</div>
-                                            <div className="flex items-center gap-1"><MapPin className="h-3 w-3" />{apt.room}</div>
+                                            <div className="flex items-center gap-1 truncate"><User className="h-3 w-3" />{apt.doctor}</div>
+                                            <div className="flex items-center gap-1 truncate"><MapPin className="h-3 w-3" />{apt.room}</div>
                                         </div>
                                     </div>
                                 </div>
                             );
-                        }
 
-                        return (
-                            <Dialog key={apt.id} open={isDialogOpen && editingEvent?.id === apt.id} onOpenChange={(open) => {
-                                setIsDialogOpen(open);
-                                if (open) setEditingEvent(apt);
-                            }}>
-                                <DialogTrigger asChild>
+                            if (apt.type === 'google') {
+                                return (
                                     <div
-                                        className={cn(
-                                            "absolute left-20 right-4 rounded-lg border p-3 cursor-pointer hover:shadow-lg transition-all border-l-4",
-                                            getTypeColor(apt.type)
-                                        )}
+                                        key={apt.id}
+                                        className="absolute left-20 right-4"
                                         style={{ top: `${topPosition}px`, height: `${height}px` }}
                                     >
-                                        <div className="flex flex-col h-full">
-                                            <div className="flex justify-between items-start">
-                                                <span className="font-semibold text-sm">{apt.title}</span>
-                                                <span className="text-xs opacity-70 flex items-center gap-1">
-                                                    <Clock className="h-3 w-3" />
-                                                    {format(apt.start, 'HH:mm')} - {format(addHours(apt.start, Number(apt.duration)), 'HH:mm')}
-                                                </span>
-                                            </div>
-                                            <div className="mt-auto flex items-center justify-between text-xs opacity-80 pt-2 border-t border-black/5 dark:border-white/5">
-                                                <div className="flex items-center gap-1"><User className="h-3 w-3" />{apt.doctor}</div>
-                                                <div className="flex items-center gap-1"><MapPin className="h-3 w-3" />{apt.room}</div>
-                                            </div>
-                                        </div>
+                                        <EventContent />
                                     </div>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>Modifier le rendez-vous</DialogTitle>
-                                        <DialogDescription>Changer les détails de l'intervention ou de la consultation.</DialogDescription>
-                                    </DialogHeader>
-                                    <form onSubmit={handleSaveEvent} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label>Titre</Label>
-                                            <Input
-                                                value={editingEvent?.title || ''}
-                                                onChange={e => setEditingEvent({ ...editingEvent, title: e.target.value })}
-                                            />
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label>Médecin</Label>
-                                                <Input
-                                                    value={editingEvent?.doctor || ''}
-                                                    onChange={e => setEditingEvent({ ...editingEvent, doctor: e.target.value })}
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label>Salle</Label>
-                                                <Input
-                                                    value={editingEvent?.room || ''}
-                                                    onChange={e => setEditingEvent({ ...editingEvent, room: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button type="submit">Enregistrer</Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                        );
-                    })}
+                                );
+                            }
 
-                    {/* Current Time Indicator */}
-                    <div
-                        className="absolute left-16 right-0 border-t-2 border-red-500 z-10 flex items-center pointer-events-none"
-                        style={{ top: `${((new Date().getHours() - 7) * 80) + ((new Date().getMinutes() / 60) * 80)}px` }}
-                    >
-                        <div className="h-2 w-2 rounded-full bg-red-500 -ml-1" />
+                            return (
+                                <DraggableEvent
+                                    key={apt.id}
+                                    event={apt}
+                                    top={topPosition}
+                                    height={height}
+                                    className="left-20 right-4"
+                                >
+                                    <Dialog open={isDialogOpen && editingEvent?.id === apt.id} onOpenChange={(open) => {
+                                        setIsDialogOpen(open);
+                                        if (open) setEditingEvent(apt);
+                                    }}>
+                                        <DialogTrigger asChild>
+                                            <div onClick={(e) => e.stopPropagation()}> {/* Prevent drag start for click */}
+                                                <EventContent />
+                                            </div>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Modifier le rendez-vous</DialogTitle>
+                                                <DialogDescription>Changer les détails de l'intervention ou de la consultation.</DialogDescription>
+                                            </DialogHeader>
+                                            <form onSubmit={handleSaveEvent} className="space-y-4">
+                                                <div className="space-y-2">
+                                                    <Label>Titre</Label>
+                                                    <Input
+                                                        value={editingEvent?.title || ''}
+                                                        onChange={e => setEditingEvent({ ...editingEvent, title: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div className="space-y-2">
+                                                        <Label>Médecin</Label>
+                                                        <Input
+                                                            value={editingEvent?.doctor || ''}
+                                                            onChange={e => setEditingEvent({ ...editingEvent, doctor: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label>Salle</Label>
+                                                        <Input
+                                                            value={editingEvent?.room || ''}
+                                                            onChange={e => setEditingEvent({ ...editingEvent, room: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <DialogFooter>
+                                                    <Button type="submit">Enregistrer</Button>
+                                                </DialogFooter>
+                                            </form>
+                                        </DialogContent>
+                                    </Dialog>
+                                </DraggableEvent>
+                            );
+                        })}
+
+                        {/* Current Time Indicator */}
+                        <div
+                            className="absolute left-16 right-0 border-t-2 border-red-500 z-10 flex items-center pointer-events-none"
+                            style={{ top: `${((new Date().getHours() - 7) * 80) + ((new Date().getMinutes() / 60) * 80)}px` }}
+                        >
+                            <div className="h-2 w-2 rounded-full bg-red-500 -ml-1" />
+                        </div>
                     </div>
-                </div>
+                </DndContext>
             </div>
         </Card>
     );

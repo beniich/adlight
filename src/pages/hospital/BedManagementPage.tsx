@@ -2,6 +2,8 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { DepartmentGrid } from "@/components/hospital/DepartmentGrid";
 import { mockDepartments, mockHospitalBeds } from "@/lib/mockData";
 import { BedDouble, Filter, RefreshCw } from "lucide-react";
+import { ServiceManager } from "@/components/hospital/ServiceManager";
+import { BedManager } from "@/components/hospital/BedManager";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -34,13 +36,11 @@ const BedManagementPage = () => {
                         </p>
                     </div>
                     <div className="flex gap-3">
-                        <Button variant="outline" className="gap-2">
-                            <RefreshCw className="h-4 w-4" />
-                            Actualiser
-                        </Button>
+                        <ServiceManager />
+                        <BedManager />
                         <Button variant="secondary" className="gap-2 bg-primary/10 hover:bg-primary/20 text-primary border-primary/20">
                             <Filter className="h-4 w-4" />
-                            Filtrer par Étage
+                            Filtrer
                         </Button>
                     </div>
                 </div>

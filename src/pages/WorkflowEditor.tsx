@@ -84,7 +84,7 @@ const WorkflowEditorContent = () => {
             }));
             setEdges(flowEdges);
         }
-    }, [location.state]);
+    }, [location.state, setNodes, setEdges]);
 
     const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
         setSelectedNode({ id: node.id, data: node.data as CustomNodeData });

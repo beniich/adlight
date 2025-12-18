@@ -20,7 +20,7 @@ export default function TestLogin() {
         setLoading(false);
         // After login, redirect to dashboard
         navigate('/dashboard');
-    }, []);
+    }, [navigate, setUser, setLoading]);
 
     return null;
 }

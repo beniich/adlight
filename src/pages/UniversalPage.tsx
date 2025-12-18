@@ -17,7 +17,8 @@ const UniversalPage = () => {
 
     // Custom hook usage
     const database = useEngineStore(state => state.getDatabase('db_deals_001'));
-    const record = recordId ? useEngineStore(state => state.records[recordId]) : null;
+    const allRecords = useEngineStore(state => state.records);
+    const record = recordId ? allRecords[recordId] : null;
     const updateRecord = useEngineStore(state => state.updateRecord);
     const addRecord = useEngineStore(state => state.addRecord);
 
@@ -62,7 +63,7 @@ const UniversalPage = () => {
                             <Separator orientation="vertical" className="h-4 mx-2" />
                             <div className="flex items-center gap-2 text-sm text-foreground">
                                 <span>{record.icon}</span>
-                                <span className="font-medium truncate max-w-[200px]">{record.properties.name}</span>
+                                <span className="font-medium truncate max-w-[200px]">{String(record.properties.name || '')}</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-1">

@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, UserPlus, CalendarDays, BedDouble, Stethoscope, Receipt, BarChart3, Settings, ShieldCheck, Activity, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Users, UserPlus, CalendarDays, BedDouble, Stethoscope, Receipt, BarChart3, Settings, ShieldCheck, Activity, TrendingUp, MessageSquare } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -18,10 +18,11 @@ const navigationItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Patients", url: "/patients", icon: Users },
   { title: "Agenda", url: "/schedule", icon: CalendarDays },
-  { title: "Personnel", url: "/staff", icon: Stethoscope },
-  { title: "Services & Lits", url: "/resources", icon: BedDouble },
-  { title: "Dossier Médical", url: "/emr", icon: Activity },
-  { title: "Facturation", url: "/billing", icon: Receipt }, // Was Finance
+  { title: "Personnel", url: "/staff", icon: Users },
+  { title: "Ressources", url: "/resources", icon: BedDouble },
+  { title: "Facturation", url: "/finance/invoices", icon: Receipt },
+  { title: "Messagerie", url: "/messages", icon: MessageSquare },
+  // Was Finance
   { title: "Rapports", url: "/reports", icon: BarChart3 },
   { title: "Sécurité", url: "/security", icon: ShieldCheck },
   { title: "Paramètres", url: "/settings", icon: Settings },

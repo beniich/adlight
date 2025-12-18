@@ -38,6 +38,8 @@ const SecurityPage = lazy(() => import("./pages/SecurityPage")); // PROMPT 6
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Subscriptions = lazy(() => import("./pages/Subscriptions"));
 const Checkout = lazy(() => import("./pages/Checkout"));
+const InvoicesPage = lazy(() => import("./pages/finance/InvoicesPage").then(module => ({ default: module.InvoicesPage })));
+const InvoiceEditor = lazy(() => import("./pages/finance/InvoiceEditor").then(module => ({ default: module.InvoiceEditor })));
 const Workflows = lazy(() => import("./pages/Workflows"));
 const WorkflowEditor = lazy(() => import("./pages/WorkflowEditor"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -47,6 +49,7 @@ const BillingPage = lazy(() => import("./pages/hospital/BillingPage"));
 const SchedulePage = lazy(() => import("./pages/hospital/SchedulePage"));
 const StaffPage = lazy(() => import("./pages/hospital/StaffPage"));
 const BedManagementPage = lazy(() => import("./pages/hospital/BedManagementPage"));
+const PatientDetailsPage = lazy(() => import("./pages/hospital/PatientDetailsPage"));
 
 
 // Configure React Query with optimizations
@@ -86,6 +89,7 @@ const App = () => (
               {/* Core Hospital Modules */}
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/patients" element={<ProtectedRoute><PatientsPage /></ProtectedRoute>} />
+              <Route path="/patients/:id" element={<ProtectedRoute><PatientDetailsPage /></ProtectedRoute>} />
 
               {/* Hospital Modules (Implemented) */}
               <Route path="/schedule" element={<ProtectedRoute><SchedulePage /></ProtectedRoute>} />
@@ -103,6 +107,9 @@ const App = () => (
               <Route path="/companies" element={<ProtectedRoute><Companies /></ProtectedRoute>} />
               <Route path="/deals" element={<ProtectedRoute><Deals /></ProtectedRoute>} />
               <Route path="/finance" element={<ProtectedRoute><FinancePage /></ProtectedRoute>} /> {/* PROMPT 3 */}
+              <Route path="/finance/invoices" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
+              <Route path="/finance/invoices/:id" element={<ProtectedRoute><InvoiceEditor /></ProtectedRoute>} />
+              <Route path="/finance/billing" element={<ProtectedRoute><InvoicesPage /></ProtectedRoute>} />
               <Route path="/security" element={<ProtectedRoute><SecurityPage /></ProtectedRoute>} /> {/* PROMPT 6 */}
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
