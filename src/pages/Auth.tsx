@@ -11,7 +11,10 @@ import { Cloud, Github } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 
+import { useTranslation } from "react-i18next";
+
 const Auth = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -143,34 +146,34 @@ const Auth = () => {
         {/* Header */}
         <div className="text-center">
           <Link to="/" className="inline-flex items-center gap-2 mb-4">
-            <Cloud className="h-8 w-8 text-primary" />
+            <img src="/logo.png" alt="Cloud Industrie" className="h-12 w-auto" />
             <span className="text-2xl font-bold text-foreground">Cloud Industrie</span>
           </Link>
-          <h1 className="text-3xl font-bold text-foreground">Bienvenue</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t("auth.welcome")}</h1>
           <p className="text-muted-foreground mt-2">
-            Connectez-vous ou créez un compte
+            {t("auth.description")}
           </p>
         </div>
 
         {/* Auth Card */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle>Authentification</CardTitle>
+            <CardTitle>{t("auth.cardTitle")}</CardTitle>
             <CardDescription>
-              Accédez à votre espace Cloud Industrie
+              {t("auth.cardDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Connexion</TabsTrigger>
-                <TabsTrigger value="signup">Inscription</TabsTrigger>
+                <TabsTrigger value="signin">{t("auth.login")}</TabsTrigger>
+                <TabsTrigger value="signup">{t("auth.register")}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="signin">
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label htmlFor="signin-email">{t("auth.email")}</Label>
                     <Input
                       id="signin-email"
                       type="email"
@@ -181,7 +184,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signin-password">Mot de passe</Label>
+                    <Label htmlFor="signin-password">{t("auth.password")}</Label>
                     <Input
                       id="signin-password"
                       type="password"
@@ -192,7 +195,7 @@ const Auth = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Connexion..." : "Se connecter"}
+                    {loading ? t("auth.loggingIn") : t("auth.loginAction")}
                   </Button>
                 </form>
               </TabsContent>
@@ -200,18 +203,18 @@ const Auth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nom complet</Label>
+                    <Label htmlFor="signup-name">{t("auth.fullName")}</Label>
                     <Input
                       id="signup-name"
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="Jean Dupont"
+                      placeholder={t("auth.fullNamePlaceholder")}
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
+                    <Label htmlFor="signup-email">{t("auth.email")}</Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -222,7 +225,7 @@ const Auth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">Mot de passe</Label>
+                    <Label htmlFor="signup-password">{t("auth.password")}</Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -234,7 +237,7 @@ const Auth = () => {
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "Création..." : "Créer un compte"}
+                    {loading ? t("auth.registering") : t("auth.registerAction")}
                   </Button>
                 </form>
               </TabsContent>
@@ -247,7 +250,7 @@ const Auth = () => {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">
-                  Ou continuer avec
+                  {t("auth.orContinueWith")}
                 </span>
               </div>
             </div>
@@ -295,7 +298,7 @@ const Auth = () => {
 
         <div className="text-center">
           <Button variant="link" asChild>
-            <Link to="/">Retour à l'accueil</Link>
+            <Link to="/">{t("auth.backToHome")}</Link>
           </Button>
         </div>
       </div>

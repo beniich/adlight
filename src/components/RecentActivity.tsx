@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { UserPlus, Mail, Phone, FileText, CheckCircle2 } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 interface Activity {
   id: string;
   type: "user" | "email" | "call" | "document" | "deal";
@@ -71,10 +73,12 @@ const activityColors = {
 };
 
 export const RecentActivity = () => {
+  const { t } = useTranslation();
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Activité récente</CardTitle>
+        <CardTitle>{t("dashboard.recentActivity")}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

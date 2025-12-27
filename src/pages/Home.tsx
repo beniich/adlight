@@ -4,28 +4,31 @@ import { Cloud, Shield, Zap, Users, ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { useTranslation } from "react-i18next";
 
 const Home = () => {
+  const { t } = useTranslation();
+
   const services = [
     {
       icon: Cloud,
-      title: "Solutions Cloud",
-      description: "Infrastructure cloud sécurisée et évolutive pour votre entreprise"
+      title: t("home.services.items.cloud.title"),
+      description: t("home.services.items.cloud.description")
     },
     {
       icon: Shield,
-      title: "Sécurité Avancée",
-      description: "Protection de vos données avec les dernières technologies de cybersécurité"
+      title: t("home.services.items.security.title"),
+      description: t("home.services.items.security.description")
     },
     {
       icon: Zap,
-      title: "Performance Optimale",
-      description: "Des services rapides et fiables pour votre productivité"
+      title: t("home.services.items.performance.title"),
+      description: t("home.services.items.performance.description")
     },
     {
       icon: Users,
-      title: "Support Dédié",
-      description: "Une équipe d'experts à votre écoute 24/7"
+      title: t("home.services.items.support.title"),
+      description: t("home.services.items.support.description")
     }
   ];
 
@@ -33,13 +36,13 @@ const Home = () => {
     {
       name: "Marie Dupont",
       company: "TechCorp",
-      content: "Une solution cloud exceptionnelle qui a transformé notre infrastructure IT.",
+      content: t("home.testimonials.items.0.content"),
       rating: 5
     },
     {
       name: "Jean Martin",
       company: "InnovateSAS",
-      content: "Service client remarquable et performances au rendez-vous.",
+      content: t("home.testimonials.items.1.content"),
       rating: 5
     }
   ];
@@ -47,29 +50,29 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-4 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
         <div className="container mx-auto relative z-10">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <h1 className="text-5xl md:text-6xl font-bold text-foreground leading-tight">
-              Cloud Industrie – Solutions Cloud et Services Numériques
+              {t("home.hero.title")}
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Transformez votre entreprise avec nos solutions cloud innovantes et sécurisées
+              {t("home.hero.subtitle")}
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Button asChild size="lg" className="gap-2">
                 <Link to="/services">
-                  Découvrir <ArrowRight className="h-4 w-4" />
+                  {t("home.hero.cta.discover")} <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/auth">Créer un compte</Link>
+                <Link to="/auth">{t("home.hero.cta.createAccount")}</Link>
               </Button>
               <Button asChild size="lg" variant="secondary">
-                <Link to="/contact">Nous contacter</Link>
+                <Link to="/contact">{t("home.hero.cta.contact")}</Link>
               </Button>
             </div>
           </div>
@@ -81,13 +84,13 @@ const Home = () => {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Nos Services
+              {t("home.services.title")}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Des solutions adaptées à tous vos besoins numériques
+              {t("home.services.subtitle")}
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {services.map((service, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow border-border/50">
@@ -108,7 +111,7 @@ const Home = () => {
 
           <div className="text-center mt-12">
             <Button asChild size="lg" variant="outline">
-              <Link to="/services">Voir tous les services</Link>
+              <Link to="/services">{t("home.services.viewAll")}</Link>
             </Button>
           </div>
         </div>
@@ -119,10 +122,10 @@ const Home = () => {
         <div className="container mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Témoignages Clients
+              {t("home.testimonials.title")}
             </h2>
             <p className="text-muted-foreground">
-              Ce que nos clients disent de nous
+              {t("home.testimonials.subtitle")}
             </p>
           </div>
 

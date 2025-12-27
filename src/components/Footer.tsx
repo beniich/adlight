@@ -1,7 +1,10 @@
 import { Link } from "react-router-dom";
 import { Cloud } from "lucide-react";
 
+import { useTranslation } from "react-i18next";
+
 export const Footer = () => {
+  const { t } = useTranslation();
   return (
     <footer className="bg-muted/30 border-t border-border">
       <div className="container mx-auto px-4 py-12">
@@ -13,27 +16,27 @@ export const Footer = () => {
               <span className="font-bold text-lg text-foreground">Cloud Industrie</span>
             </Link>
             <p className="text-sm text-muted-foreground">
-              Solutions Cloud et Services Numériques pour votre entreprise
+              {t("footer.description")}
             </p>
           </div>
 
           {/* Services */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Services</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t("footer.services.title")}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Infrastructure Cloud
+                  {t("footer.services.infrastructure")}
                 </Link>
               </li>
               <li>
                 <Link to="/services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Gestion de Données
+                  {t("footer.services.dataManagement")}
                 </Link>
               </li>
               <li>
                 <Link to="/services" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Sécurité
+                  {t("footer.services.security")}
                 </Link>
               </li>
             </ul>
@@ -41,16 +44,16 @@ export const Footer = () => {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Entreprise</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t("footer.company.title")}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  À propos
+                  {t("footer.company.about")}
                 </Link>
               </li>
               <li>
                 <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Contact
+                  {t("footer.company.contact")}
                 </Link>
               </li>
             </ul>
@@ -58,16 +61,16 @@ export const Footer = () => {
 
           {/* Legal */}
           <div>
-            <h3 className="font-semibold text-foreground mb-4">Légal</h3>
+            <h3 className="font-semibold text-foreground mb-4">{t("footer.legal.title")}</h3>
             <ul className="space-y-2">
               <li>
                 <Link to="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Conditions d'utilisation
+                  {t("footer.legal.terms")}
                 </Link>
               </li>
               <li>
                 <Link to="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Politique de confidentialité
+                  {t("footer.legal.privacy")}
                 </Link>
               </li>
             </ul>
@@ -76,7 +79,7 @@ export const Footer = () => {
 
         <div className="mt-8 pt-8 border-t border-border text-center">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Cloud Industrie. Tous droits réservés.
+            {t("footer.copyright", { year: new Date().getFullYear(), company: "Cloud Industrie" })}
           </p>
         </div>
       </div>

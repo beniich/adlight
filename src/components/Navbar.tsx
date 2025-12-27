@@ -14,6 +14,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export const Navbar = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -64,12 +65,12 @@ export const Navbar = () => {
   };
 
   const navLinks = [
-    { to: "/", label: "Accueil" },
-    { to: "/pitch", label: "MedFlow AI" },
-    { to: "/services", label: "Services" },
-    { to: "/pricing", label: "Tarifs" },
-    { to: "/about", label: "À propos" },
-    { to: "/contact", label: "Contact" },
+    { to: "/", label: t("nav.home") },
+    { to: "/pitch", label: t("nav.medflow") },
+    { to: "/services", label: t("nav.services") },
+    { to: "/pricing", label: t("nav.pricing") },
+    { to: "/about", label: t("nav.about") },
+    { to: "/contact", label: t("nav.contact") },
   ];
 
   return (
@@ -78,7 +79,7 @@ export const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <Cloud className="h-6 w-6 text-primary" />
+            <img src="/logo.png" alt="Cloud Industrie" className="h-10 w-auto" />
             <span className="font-bold text-xl text-foreground">Cloud Industrie</span>
           </Link>
 
@@ -102,21 +103,21 @@ export const Navbar = () => {
             {showInstall && (
               <Button variant="outline" size="sm" onClick={handleInstallClick} className="gap-2">
                 <Download className="h-4 w-4" />
-                Installer
+                {t("common.install")}
               </Button>
             )}
             {user ? (
               <>
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/dashboard">Dashboard</Link>
+                  <Link to="/dashboard">{t("nav.dashboard")}</Link>
                 </Button>
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  Déconnexion
+                  {t("auth.logout")}
                 </Button>
               </>
             ) : (
               <Button size="sm" asChild>
-                <Link to="/auth">Connexion</Link>
+                <Link to="/auth">{t("auth.login")}</Link>
               </Button>
             )}
           </div>
@@ -152,14 +153,14 @@ export const Navbar = () => {
                     onClick={handleInstallClick}
                   >
                     <Download className="h-4 w-4" />
-                    Installer l'application
+                    {t("common.installApp")}
                   </Button>
                 )}
                 {user ? (
                   <>
                     <Button variant="outline" className="w-full" asChild>
                       <Link to="/dashboard" onClick={() => setIsOpen(false)}>
-                        Dashboard
+                        {t("nav.dashboard")}
                       </Link>
                     </Button>
                     <Button
@@ -170,13 +171,13 @@ export const Navbar = () => {
                         setIsOpen(false);
                       }}
                     >
-                      Déconnexion
+                      {t("auth.logout")}
                     </Button>
                   </>
                 ) : (
                   <Button className="w-full" asChild>
                     <Link to="/auth" onClick={() => setIsOpen(false)}>
-                      Connexion
+                      {t("auth.login")}
                     </Link>
                   </Button>
                 )}

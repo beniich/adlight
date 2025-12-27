@@ -21,9 +21,9 @@ interface BrandingState extends BrandingConfig {
 const DEFAULT_BRANDING: BrandingConfig = {
     appName: 'CRM Pro',
     headerTitle: 'Cloud Industrie',
-    logoUrl: null,
-    faviconUrl: null,
-    iconUrl: null,
+    logoUrl: '/logo.png',
+    faviconUrl: '/favicon.png',
+    iconUrl: '/logo.png',
     footerText: 'Cloudindustry LTD',
 };
 

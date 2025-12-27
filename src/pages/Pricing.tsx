@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 interface PlanFeature {
   text: string;
@@ -27,161 +28,162 @@ interface Plan {
   ctaVariant: "default" | "outline" | "secondary";
 }
 
-const plans: Plan[] = [
-  {
-    id: "free",
-    name: "Free",
-    description: "Idéal pour découvrir la plateforme",
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    icon: <Sparkles className="h-6 w-6" />,
-    highlighted: false,
-    features: [
-      { text: "Chat IA limité (50 requêtes/mois)", included: true },
-      { text: "1 utilisateur", included: true },
-      { text: "Accès aux processus de base", included: true },
-      { text: "3 ordres de fabrication/mois", included: true },
-      { text: "Support email standard", included: true },
-      { text: "Analyse méthodes IA", included: false },
-      { text: "Vision IA (détection défauts)", included: false },
-      { text: "Intégrations ERP", included: false },
-    ],
-    cta: "Commencer gratuitement",
-    ctaVariant: "outline",
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    description: "Pour les équipes de production",
-    monthlyPrice: 49,
-    yearlyPrice: 39,
-    icon: <Zap className="h-6 w-6" />,
-    highlighted: true,
-    badge: "Populaire",
-    features: [
-      { text: "Chat IA illimité", included: true },
-      { text: "GPT-4 / GPT-5 / Claude / Gemini", included: true },
-      { text: "Analyse Méthodes IA (MTM/MOST)", included: true },
-      { text: "Vision IA (détection défauts)", included: true },
-      { text: "Optimisation planning intelligent", included: true },
-      { text: "5 utilisateurs inclus", included: true },
-      { text: "Support prioritaire", included: true },
-      { text: "Rapports avancés PDF/Excel", included: true },
-      { text: "Intégrations ERP de base", included: true },
-    ],
-    cta: "Démarrer l'essai Pro",
-    ctaVariant: "default",
-  },
-  {
-    id: "business",
-    name: "Business",
-    description: "Solution multi-sites complète",
-    monthlyPrice: 129,
-    yearlyPrice: 99,
-    icon: <Building2 className="h-6 w-6" />,
-    highlighted: false,
-    features: [
-      { text: "Tout le plan Pro +", included: true },
-      { text: "Multi-usines illimitées", included: true },
-      { text: "OEE / TRS complet temps réel", included: true },
-      { text: "Maintenance prédictive IA", included: true },
-      { text: "API illimitée", included: true },
-      { text: "Workers IA dédiés", included: true },
-      { text: "Historique long terme (5 ans)", included: true },
-      { text: "Permissions avancées RBAC", included: true },
-      { text: "Sécurité Enterprise (SSO)", included: true },
-    ],
-    cta: "Contacter les ventes",
-    ctaVariant: "secondary",
-  },
-  {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "Solution sur-mesure",
-    monthlyPrice: null,
-    yearlyPrice: null,
-    icon: <Crown className="h-6 w-6" />,
-    highlighted: false,
-    features: [
-      { text: "Tout le plan Business +", included: true },
-      { text: "IA personnalisée fine-tuned", included: true },
-      { text: "Intégration machine-to-cloud", included: true },
-      { text: "Support 24/7 dédié", included: true },
-      { text: "Hébergement cloud privé", included: true },
-      { text: "Audit & conformité ISO", included: true },
-      { text: "Connecteurs MES sur mesure", included: true },
-      { text: "Formation équipe incluse", included: true },
-      { text: "SLA garantie 99.9%", included: true },
-    ],
-    cta: "Nous contacter",
-    ctaVariant: "outline",
-  },
-];
-
-const features = [
-  {
-    icon: <Brain className="h-8 w-8" />,
-    title: "IA Industrielle Avancée",
-    description: "Analyse méthodes, optimisation ligne, simulation planning automatique.",
-  },
-  {
-    icon: <Calendar className="h-8 w-8" />,
-    title: "Planificateur Intelligent",
-    description: "Gantt dynamique + IA qui propose le meilleur séquencement.",
-  },
-  {
-    icon: <Settings className="h-8 w-8" />,
-    title: "Maintenance Prédictive",
-    description: "Détection anomalies machine + prévision panne avant incident.",
-  },
-  {
-    icon: <BarChart3 className="h-8 w-8" />,
-    title: "KPI & Analytics",
-    description: "TRS, OEE, Pareto, qualité, rendement en temps réel.",
-  },
-  {
-    icon: <Eye className="h-8 w-8" />,
-    title: "Vision Industrielle",
-    description: "Détection défaut, inspection produit, ergonomie poste.",
-  },
-  {
-    icon: <Cpu className="h-8 w-8" />,
-    title: "Gestion Processus",
-    description: "Création SOP, AMDEC, fiches opérateur automatisées.",
-  },
-  {
-    icon: <Shield className="h-8 w-8" />,
-    title: "Sécurité Enterprise",
-    description: "RBAC, audit, isolation par usine, conformité.",
-  },
-  {
-    icon: <Users className="h-8 w-8" />,
-    title: "Collaboration Équipe",
-    description: "5 comptes inclus, partage, commentaires, historique.",
-  },
-];
-
-const faqs = [
-  {
-    question: "Puis-je changer de plan à tout moment ?",
-    answer: "Oui, vous pouvez upgrader ou downgrader votre plan à tout moment. Les changements prennent effet immédiatement avec un prorata sur votre facturation.",
-  },
-  {
-    question: "Y a-t-il un essai gratuit pour les plans payants ?",
-    answer: "Oui, tous les plans payants incluent un essai gratuit de 14 jours, sans engagement ni carte bancaire requise.",
-  },
-  {
-    question: "Comment fonctionne la facturation annuelle ?",
-    answer: "La facturation annuelle vous offre 2 mois gratuits par rapport à la facturation mensuelle. Vous êtes facturé une fois par an.",
-  },
-  {
-    question: "Quelles intégrations ERP sont supportées ?",
-    answer: "Nous supportons SAP, Oracle, Microsoft Dynamics, Sage, et de nombreux autres ERP. L'intégration personnalisée est disponible sur le plan Enterprise.",
-  },
-];
-
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(true);
+  const { t } = useTranslation();
+
+  const plans: Plan[] = [
+    {
+      id: "free",
+      name: t("pricing.plans.free.name"),
+      description: t("pricing.plans.free.description"),
+      monthlyPrice: 0,
+      yearlyPrice: 0,
+      icon: <Sparkles className="h-6 w-6" />,
+      highlighted: false,
+      features: [
+        { text: t("pricing.plans.free.features.chat"), included: true },
+        { text: t("pricing.plans.free.features.users"), included: true },
+        { text: t("pricing.plans.free.features.process"), included: true },
+        { text: t("pricing.plans.free.features.manufacturing"), included: true },
+        { text: t("pricing.plans.free.features.support"), included: true },
+        { text: t("pricing.plans.free.features.analysis"), included: false },
+        { text: t("pricing.plans.free.features.vision"), included: false },
+        { text: t("pricing.plans.free.features.erp"), included: false },
+      ],
+      cta: t("pricing.plans.free.cta"),
+      ctaVariant: "outline",
+    },
+    {
+      id: "pro",
+      name: t("pricing.plans.pro.name"),
+      description: t("pricing.plans.pro.description"),
+      monthlyPrice: 49,
+      yearlyPrice: 39,
+      icon: <Zap className="h-6 w-6" />,
+      highlighted: true,
+      badge: t("pricing.plans.pro.badge"),
+      features: [
+        { text: t("pricing.plans.pro.features.chat"), included: true },
+        { text: t("pricing.plans.pro.features.models"), included: true },
+        { text: t("pricing.plans.pro.features.analysis"), included: true },
+        { text: t("pricing.plans.pro.features.vision"), included: true },
+        { text: t("pricing.plans.pro.features.planning"), included: true },
+        { text: t("pricing.plans.pro.features.users"), included: true },
+        { text: t("pricing.plans.pro.features.support"), included: true },
+        { text: t("pricing.plans.pro.features.reports"), included: true },
+        { text: t("pricing.plans.pro.features.erp"), included: true },
+      ],
+      cta: t("pricing.plans.pro.cta"),
+      ctaVariant: "default",
+    },
+    {
+      id: "business",
+      name: t("pricing.plans.business.name"),
+      description: t("pricing.plans.business.description"),
+      monthlyPrice: 129,
+      yearlyPrice: 99,
+      icon: <Building2 className="h-6 w-6" />,
+      highlighted: false,
+      features: [
+        { text: t("pricing.plans.business.features.pro"), included: true },
+        { text: t("pricing.plans.business.features.multi"), included: true },
+        { text: t("pricing.plans.business.features.oee"), included: true },
+        { text: t("pricing.plans.business.features.maintenance"), included: true },
+        { text: t("pricing.plans.business.features.api"), included: true },
+        { text: t("pricing.plans.business.features.workers"), included: true },
+        { text: t("pricing.plans.business.features.history"), included: true },
+        { text: t("pricing.plans.business.features.rbac"), included: true },
+        { text: t("pricing.plans.business.features.sso"), included: true },
+      ],
+      cta: t("pricing.plans.business.cta"),
+      ctaVariant: "secondary",
+    },
+    {
+      id: "enterprise",
+      name: t("pricing.plans.enterprise.name"),
+      description: t("pricing.plans.enterprise.description"),
+      monthlyPrice: null,
+      yearlyPrice: null,
+      icon: <Crown className="h-6 w-6" />,
+      highlighted: false,
+      features: [
+        { text: t("pricing.plans.enterprise.features.business"), included: true },
+        { text: t("pricing.plans.enterprise.features.custom"), included: true },
+        { text: t("pricing.plans.enterprise.features.machine"), included: true },
+        { text: t("pricing.plans.enterprise.features.support"), included: true },
+        { text: t("pricing.plans.enterprise.features.hosting"), included: true },
+        { text: t("pricing.plans.enterprise.features.audit"), included: true },
+        { text: t("pricing.plans.enterprise.features.mes"), included: true },
+        { text: t("pricing.plans.enterprise.features.training"), included: true },
+        { text: t("pricing.plans.enterprise.features.sla"), included: true },
+      ],
+      cta: t("pricing.plans.enterprise.cta"),
+      ctaVariant: "outline",
+    },
+  ];
+
+  const features = [
+    {
+      icon: <Brain className="h-8 w-8" />,
+      title: t("pricing.featureItems.ai.title"),
+      description: t("pricing.featureItems.ai.description"),
+    },
+    {
+      icon: <Calendar className="h-8 w-8" />,
+      title: t("pricing.featureItems.planner.title"),
+      description: t("pricing.featureItems.planner.description"),
+    },
+    {
+      icon: <Settings className="h-8 w-8" />,
+      title: t("pricing.featureItems.maintenance.title"),
+      description: t("pricing.featureItems.maintenance.description"),
+    },
+    {
+      icon: <BarChart3 className="h-8 w-8" />,
+      title: t("pricing.featureItems.kpi.title"),
+      description: t("pricing.featureItems.kpi.description"),
+    },
+    {
+      icon: <Eye className="h-8 w-8" />,
+      title: t("pricing.featureItems.vision.title"),
+      description: t("pricing.featureItems.vision.description"),
+    },
+    {
+      icon: <Cpu className="h-8 w-8" />,
+      title: t("pricing.featureItems.process.title"),
+      description: t("pricing.featureItems.process.description"),
+    },
+    {
+      icon: <Shield className="h-8 w-8" />,
+      title: t("pricing.featureItems.security.title"),
+      description: t("pricing.featureItems.security.description"),
+    },
+    {
+      icon: <Users className="h-8 w-8" />,
+      title: t("pricing.featureItems.team.title"),
+      description: t("pricing.featureItems.team.description"),
+    },
+  ];
+
+  const faqs = [
+    {
+      question: t("pricing.faq.change.q"),
+      answer: t("pricing.faq.change.a"),
+    },
+    {
+      question: t("pricing.faq.trial.q"),
+      answer: t("pricing.faq.trial.a"),
+    },
+    {
+      question: t("pricing.faq.billing.q"),
+      answer: t("pricing.faq.billing.a"),
+    },
+    {
+      question: t("pricing.faq.erp.q"),
+      answer: t("pricing.faq.erp.a"),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -197,20 +199,20 @@ export default function Pricing() {
           >
             <Badge variant="secondary" className="mb-4">
               <Sparkles className="h-3 w-3 mr-1" />
-              Tarification simple et transparente
+              {t("pricing.badge")}
             </Badge>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-              Choisissez le plan qui vous
-              <span className="text-primary block mt-2">propulse vers l'excellence</span>
+              {t("pricing.heroTitle")}
+              <span className="text-primary block mt-2">{t("pricing.heroTitleHighlight")}</span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              Pas de frais cachés. Pas d'engagement. Commencez gratuitement et évoluez selon vos besoins.
+              {t("pricing.heroSubtitle")}
             </p>
 
             {/* Billing Toggle */}
             <div className="flex items-center justify-center gap-4 mb-12">
               <span className={`text-sm font-medium ${!isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-                Mensuel
+                {t("pricing.monthly")}
               </span>
               <Switch
                 checked={isAnnual}
@@ -218,11 +220,11 @@ export default function Pricing() {
                 className="data-[state=checked]:bg-primary"
               />
               <span className={`text-sm font-medium ${isAnnual ? 'text-foreground' : 'text-muted-foreground'}`}>
-                Annuel
+                {t("pricing.yearly")}
               </span>
               {isAnnual && (
                 <Badge variant="default" className="bg-success text-success-foreground">
-                  -20% économisé
+                  {t("pricing.save20")}
                 </Badge>
               )}
             </div>
@@ -278,17 +280,17 @@ export default function Pricing() {
                         {isAnnual ? plan.yearlyPrice : plan.monthlyPrice}€
                       </span>
                       <span className={`text-sm ${plan.highlighted ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                        /mois
+                        {t("pricing.perMonth")}
                       </span>
                       {isAnnual && plan.monthlyPrice > 0 && (
                         <p className={`text-xs mt-1 ${plan.highlighted ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
-                          Facturé annuellement ({(plan.yearlyPrice ?? 0) * 12}€/an)
+                          {t("pricing.perYear")} ({(plan.yearlyPrice ?? 0) * 12}€)
                         </p>
                       )}
                     </>
                   ) : (
                     <span className={`text-2xl font-bold ${plan.highlighted ? '' : 'text-foreground'}`}>
-                      Sur devis
+                      {t("pricing.perYear")}
                     </span>
                   )}
                 </div>
@@ -342,10 +344,10 @@ export default function Pricing() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Fonctionnalités incluses
+              {t("pricing.featuresTitle")}
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Toutes les fonctionnalités dont vous avez besoin pour digitaliser votre industrie
+              {t("pricing.featuresSubtitle")}
             </p>
           </motion.div>
 
@@ -379,7 +381,7 @@ export default function Pricing() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Questions fréquentes
+              {t("pricing.faqTitle")}
             </h2>
           </motion.div>
 
@@ -411,10 +413,10 @@ export default function Pricing() {
           >
             <MessageSquare className="h-12 w-12 mx-auto mb-6 text-primary-foreground" />
             <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
-              Besoin d'aide pour choisir ?
+              {t("pricing.helpTitle")}
             </h2>
             <p className="text-primary-foreground/80 mb-8 max-w-lg mx-auto">
-              Notre équipe est là pour vous accompagner et trouver la solution adaptée à vos besoins industriels.
+              {t("pricing.helpSubtitle")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
@@ -424,7 +426,7 @@ export default function Pricing() {
                 asChild
               >
                 <Link to="/contact">
-                  Parler à un expert
+                  {t("pricing.talkExpert")}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -435,7 +437,7 @@ export default function Pricing() {
                 asChild
               >
                 <Link to="/checkout?plan=free&billing=monthly">
-                  Essayer gratuitement
+                  {t("pricing.tryFree")}
                 </Link>
               </Button>
             </div>
